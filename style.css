@@ -28,6 +28,11 @@ pre {
     right: 1em;
 }
 
+
+.logo li:only-child {
+    display: none;
+}
+
 .args {
   background-color: #f1f1f1;
   padding: 3px;
