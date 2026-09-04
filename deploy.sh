@@ -57,35 +57,63 @@ latest_tag() {
   retry gh api "repos/$1/tags" --jq '.[0].name' 2>/dev/null
 }
 
-# The docs landing page has a different name per library: multi-module libs get
-# <Title>_index.html, single-module libs that turn the index off get a lone
-# <Module>.html, and libs with several modules but no index get <Title>.html.
-# nginx wants index.html either way. <Title> is whatever gendocs.carp sets as
-# the project title, which is case sensitive and need not match the repo name.
+# Find a generated page by name, ignoring case, comparing in the shell rather
+# than on the filesystem: macOS is case insensitive and would match CLI.html
+# for cli.html, which Linux will not.
+find_page() {
+  local docs=$1 want base f
+  want=$(printf '%s' "$2" | tr '[:upper:]' '[:lower:]')
+  for f in "$docs"/*.html; do
+    base=$(basename "$f")
+    [ "$(printf '%s' "$base" | tr '[:upper:]' '[:lower:]')" = "$want" ] || continue
+    printf '%s\n' "$f"
+    return 0
+  done
+  return 1
+}
+
 doc_title() {
   sed -n 's/.*(Project.config "title" "\([^"]*\)").*/\1/p' "$1/gendocs.carp" | head -n 1
 }
 
+# The modules a library says it documents. Every one of them must produce a
+# page, which is the only real check we have: a load that fails part way still
+# exits 0, so the exit status says nothing.
+doc_modules() {
+  sed -n 's/.*(save-docs \([^)]*\)).*/\1/p' "$1/gendocs.carp" | head -n 1
+}
+
+# The landing page has a different name per library: multi-module libraries get
+# <Title>_index.html, a library that turns the index off gets its top level
+# module page, and the title is whatever gendocs.carp sets, which need not
+# match either the repo name or the module casing. nginx wants index.html.
 normalize_landing_page() {
-  local docs=$1 title=$2 candidates
+  local docs=$1 title=$2 page f base candidates=()
   [ -f "$docs/index.html" ] && return 0
 
   if [ -n "$title" ]; then
-    for f in "$docs/${title}_index.html" "$docs/${title}.html"; do
-      if [ -f "$f" ]; then
-        cp "$f" "$docs/index.html"
-        return 0
-      fi
-    done
+    page=$(find_page "$docs" "${title}_index.html") || page=$(find_page "$docs" "${title}.html") || page=
+    if [ -n "$page" ]; then
+      cp "$page" "$docs/index.html"
+      return 0
+    fi
   fi
 
-  candidates=("$docs"/*_index.html)
+  # Several modules and no index: the landing page is the top level module,
+  # the only page whose name has no dotted parent.
+  for f in "$docs"/*.html; do
+    base=$(basename "$f" .html)
+    case "$base" in
+      *.*) ;;
+      *) candidates+=("$f") ;;
+    esac
+  done
   if [ ${#candidates[@]} -eq 1 ]; then
     cp "${candidates[0]}" "$docs/index.html"
     return 0
   fi
 
-  candidates=("$docs"/*.html)
+  candidates=("$docs"/*_index.html)
   if [ ${#candidates[@]} -eq 1 ]; then
     cp "${candidates[0]}" "$docs/index.html"
     return 0
@@ -121,14 +149,22 @@ build_lib() {
   rm -rf "$work/docs"
 
   [ -f "$work/gendocs.carp" ] || { note "no gendocs.carp"; return 1; }
-  (cd "$work" && carp -x gendocs.carp) >"$work/.gendocs.log" 2>&1 || {
-    note "gendocs failed, tail:"
-    sed 's/^/    /' <(tail -n 5 "$work/.gendocs.log")
-    return 1
-  }
+  # Loading runs save-docs; -x would additionally compile the library, which
+  # doc generation does not need and which drags in every C dependency.
+  (cd "$work" && carp gendocs.carp </dev/null) >"$work/.gendocs.log" 2>&1 || true
 
   docs=$work/docs
   [ -d "$docs" ] || { note "gendocs wrote no docs/"; return 1; }
+
+  local missing= m
+  for m in $(doc_modules "$work"); do
+    find_page "$docs" "$m.html" >/dev/null || missing="$missing $m"
+  done
+  if [ -n "$missing" ]; then
+    note "no page generated for:$missing"
+    sed 's/^/    /' <(tail -n 3 "$work/.gendocs.log")
+    return 1
+  fi
   normalize_landing_page "$docs" "$(doc_title "$work")" || {
     note "cannot pick a landing page from: $(cd "$docs" && echo *.html)"
     return 1
@@ -154,11 +190,14 @@ cmd_build() {
   tmp=$(mktemp -d)
   trap 'rm -rf "$tmp"' EXIT
 
-  # A route filter that matches nothing is a typo, not an empty deploy.
-  for r in "${only[@]}"; do
-    hosted_rows | awk -F'\t' -v r="$r" '$3 == r {found = 1} END {exit !found}' \
-      || die "no such route in $MANIFEST: $r"
-  done
+  # A route filter that matches nothing is a typo, not an empty deploy. Guard
+  # the expansion: bash 3.2 treats an empty array as unset under set -u.
+  if [ ${#only[@]} -gt 0 ]; then
+    for r in "${only[@]}"; do
+      hosted_rows | awk -F'\t' -v r="$r" '$3 == r {found = 1} END {exit !found}' \
+        || die "no such route in $MANIFEST: $r"
+    done
+  fi
 
   mkdir -p "$SITE"
   cp index.html style.css "$SITE/"
@@ -187,6 +226,14 @@ cmd_build() {
 
 cmd_deploy() {
   local status=0
+
+  # macOS ships openrsync, which sends a --server option set that the rrsync
+  # forced command on the server rejects. CI runs GNU rsync, so this only bites
+  # when deploying by hand from a Mac.
+  if rsync --version 2>&1 | head -n 1 | grep -qi openrsync; then
+    die "openrsync cannot talk to the rrsync forced command; install GNU rsync or deploy from CI"
+  fi
+
   cmd_build "$@" || status=$?
 
   if [ ${#built[@]} -eq 0 ]; then

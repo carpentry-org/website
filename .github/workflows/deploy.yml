@@ -4,7 +4,7 @@ name: deploy
 # Nightly so the site converges on the tags on its own, and on demand so a
 # release can publish immediately:
 #
-#   gh workflow run deploy.yml -R hellerve/website
+#   gh workflow run deploy.yml -R carpentry-org/website
 #
 # No lib repo holds a deploy secret; the key lives here and nowhere else.
 

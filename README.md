@@ -31,7 +31,7 @@ from a committed `docs/` directory, so packages do not need to commit theirs.
 CI runs `deploy` nightly. To publish a release immediately:
 
 ```sh
-gh workflow run deploy.yml -R hellerve/website
+gh workflow run deploy.yml -R carpentry-org/website
 ```
 
 ### Server
