@@ -1,0 +1,46 @@
+# name	repo	route	category	blurb
+# route "-" means the package is listed but not hosted here, so the landing page
+# links to GitHub. A route may also be a full URL, for docs hosted elsewhere.
+ast	carpentry-org/ast	ast	Encodings & Parsers	A library for working with Carp ASTs in dynamic Carp
+base64	carpentry-org/base64.carp	base64	Encodings & Parsers	A base64 library
+carp-reader	carpentry-org/carp-reader	carp-reader	Encodings & Parsers	A reader for Carp source, producing an AST annotated with parse positions
+json	carpentry-org/json	json	Encodings & Parsers	A JSON parser and serializer
+mustache	carpentry-org/mustache	mustache	Encodings & Parsers	A Mustache templating library
+parsec	carpentry-org/parsec	parsec	Encodings & Parsers	A parser combinator library
+semver	carpentry-org/semver	semver	Encodings & Parsers	Semantic versions
+uri	carpentry-org/uri	uri	Encodings & Parsers	A URI datatype and parser
+utf8	carpentry-org/utf8.carp	utf8	Encodings & Parsers	A small library for UTF8 strings
+uuid	carpentry-org/uuid	-	Encodings & Parsers	A simple UUID library and data type, conforming to RFC 4122
+bufio	carpentry-org/bufio	bufio	Data Types & Data Structures	Generic buffered I/O with interfaces
+dimensions	carpentry-org/dimensions	https://carpentry-org.github.io/dimensions/	Data Types & Data Structures	Generic utilities for working with dimensional containers
+rational	carpentry-org/rational	rational	Data Types & Data Structures	Rational numbers
+strbuf	carpentry-org/strbuf	strbuf	Data Types & Data Structures	A growable string buffer
+time	carpentry-org/time	time	Data Types & Data Structures	A date and time library
+file	carpentry-org/file	file	Files	A simple file abstraction
+path	carpentry-org/path	path	Files	A simple path library
+filelog	carpentry-org/filelog	-	Logging	A simple file-based logger
+log	carpentry-org/log	-	Logging	A logging facade
+simplelog	carpentry-org/simplelog	-	Logging	The simplest logging backend to log
+http	carpentry-org/http	http	Networking	HTTP request/response parsing, cookies, status codes, and form body parsing
+http-client	carpentry-org/http-client	http-client	Networking	An HTTP and HTTPS client with streaming and chunked transfer-encoding support
+redis	carpentry-org/redis	redis	Networking	A Redis client library
+socket	carpentry-org/sockets	sockets	Networking	TCP, UDP, Unix domain sockets, I/O multiplexing (kqueue/epoll), and buffered I/O
+tls	carpentry-org/tls	tls	Networking	A TLS stream library built on OpenSSL, with system CA verification and SNI
+web	carpentry-org/web	web	Networking	A web framework with routing, JSON integration, WebSocket support, and concurrent connection handling
+llm	carpentry-org/llm	llm	AI & LLMs	A multi-provider LLM client supporting Anthropic, OpenAI, Ollama, and Gemini, with streaming, tool use, and structured output
+cairo	carpentry-org/cairo.carp	cairo	Wrappers	a thin wrapper around Cairo
+dynlib	carpentry-org/dynlib	dynlib	Wrappers	Dynamic library loading
+hydrogen	carpentry-org/hydrogen.carp	hydrogen	Wrappers	A simple wrapper around libhydrogen
+lua	carpentry-org/lua	lua	Wrappers	A simple way to embed Lua in Carp
+llvm	carpentry-org/llvm	llvm	Wrappers	Thin LLVM-C bindings for IR construction, JIT compilation, and native code generation
+sqlite3	carpentry-org/sqlite3	sqlite3	Wrappers	A simple high-level wrapper around SQLite3
+zlib	carpentry-org/zlib	zlib	Wrappers	a high-level wrapper around ZLib
+match-utils	carpentry-org/match-utils	match-utils	Macros & Language Extensions	Pattern-matching utilities for definitions
+angler	carpentry-org/angler	angler	Developer Tools	A pluggable linter for Carp source
+carp-fmt	carpentry-org/carp-fmt	-	Developer Tools	An opinionated formatter for Carp source
+cli	carpentry-org/cli.carp	cli	Miscellaneous	A simple CLI library
+diff	carpentry-org/diff	-	Miscellaneous	A simple diffing algorithm
+grep	carpentry-org/grep	-	Miscellaneous	Simple pattern matching
+lens	carpentry-org/lens.carp	-	Miscellaneous	Lenses & Prisms, convenient handlers for nested data types
+physics	carpentry-org/physics	-	Miscellaneous	A module for physics
+using	carpentry-org/using	-	Miscellaneous	Context Managers

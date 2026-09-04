@@ -1,0 +1,55 @@
+name: deploy
+
+# Rebuilds every hosted library from its latest tag and publishes the result.
+# Nightly so the site converges on the tags on its own, and on demand so a
+# release can publish immediately:
+#
+#   gh workflow run deploy.yml -R hellerve/website
+#
+# No lib repo holds a deploy secret; the key lives here and nowhere else.
+
+on:
+  schedule:
+    - cron: "17 4 * * *"
+  workflow_dispatch:
+    inputs:
+      routes:
+        description: "routes to publish, space separated (empty means all)"
+        required: false
+        default: ""
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Carp
+        uses: carpentry-org/setup-carp@v1
+
+      - name: Install deploy key
+        run: |
+          set -euo pipefail
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$DEPLOY_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+        env:
+          DEPLOY_KEY: ${{ secrets.CARPENTRY_DEPLOY_KEY }}
+          KNOWN_HOSTS: ${{ secrets.CARPENTRY_KNOWN_HOSTS }}
+
+      - name: Check the manifest
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: ./deploy.sh check
+
+      - name: Build and deploy
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DEST: ${{ vars.CARPENTRY_DEST }}
+          ROUTES: ${{ inputs.routes }}
+        run: ./deploy.sh deploy $ROUTES
